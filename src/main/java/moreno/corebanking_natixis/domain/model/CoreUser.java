@@ -12,11 +12,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CoreUser {
-    private UUID userId;
+    private UUID id;
     private String username;
     private String password;
     private String email;
     private String fullName;
     private UserRole role;
     private boolean enabled;
+    @Builder.Default
+    private boolean active = true;
 }

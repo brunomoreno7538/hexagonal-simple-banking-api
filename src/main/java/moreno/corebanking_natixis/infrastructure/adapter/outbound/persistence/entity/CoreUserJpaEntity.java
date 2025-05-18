@@ -19,7 +19,7 @@ import java.util.UUID;
 public class CoreUserJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID userId;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -39,4 +39,7 @@ public class CoreUserJpaEntity {
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @Column(nullable = false)
+    private boolean active = true;
 }

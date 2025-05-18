@@ -30,7 +30,7 @@ public class CoreUserWebMapper {
 
     public CoreUserResponse toResponse(CoreUser coreUser) {
         return CoreUserResponse.builder()
-                .userId(coreUser.getUserId())
+                .userId(coreUser.getId())
                 .username(coreUser.getUsername())
                 .email(coreUser.getEmail())
                 .fullName(coreUser.getFullName())

@@ -12,13 +12,14 @@ public class CoreUserPersistenceMapper {
             return null;
         }
         return new CoreUserJpaEntity(
-                coreUser.getUserId(),
+                coreUser.getId(),
                 coreUser.getUsername(),
                 coreUser.getPassword(),
                 coreUser.getEmail(),
                 coreUser.getFullName(),
                 coreUser.getRole(),
-                coreUser.isEnabled()
+                coreUser.isEnabled(),
+                coreUser.isActive()
         );
     }
 
@@ -27,7 +28,7 @@ public class CoreUserPersistenceMapper {
             return null;
         }
         return CoreUser.builder()
-                .userId(jpaEntity.getUserId())
+                .id(jpaEntity.getId())
                 .username(jpaEntity.getUsername())
                 .password(jpaEntity.getPassword())
                 .email(jpaEntity.getEmail())

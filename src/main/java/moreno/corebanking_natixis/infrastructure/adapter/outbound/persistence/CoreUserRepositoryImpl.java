@@ -6,12 +6,12 @@ import moreno.corebanking_natixis.domain.model.CoreUser;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.entity.CoreUserJpaEntity;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.mapper.CoreUserPersistenceMapper;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.repository.SpringDataCoreUserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -28,39 +28,33 @@ public class CoreUserRepositoryImpl implements CoreUserRepository {
     }
 
     @Override
-    public Optional<CoreUser> findById(UUID userId) {
+    public Optional<CoreUser> findByIdAndActiveTrue(UUID userId) {
+        return springDataCoreUserRepository.findByIdAndActiveTrue(userId).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<CoreUser> findByIdEvenIfInactive(UUID userId) {
         return springDataCoreUserRepository.findById(userId).map(mapper::toDomain);
     }
 
+
     @Override
-    public Optional<CoreUser> findByUsername(String username) {
-        return springDataCoreUserRepository.findByUsername(username).map(mapper::toDomain);
+    public Optional<CoreUser> findByUsernameAndActiveTrue(String username) {
+        return springDataCoreUserRepository.findByUsernameAndActiveTrue(username).map(mapper::toDomain);
     }
 
     @Override
-    public Optional<CoreUser> findByEmail(String email) {
-        return springDataCoreUserRepository.findByEmail(email).map(mapper::toDomain);
+    public Page<CoreUser> findAllByActiveTrue(Pageable pageable) {
+        return springDataCoreUserRepository.findAllByActiveTrue(pageable).map(mapper::toDomain);
     }
 
     @Override
-    public List<CoreUser> findAll() {
-        return springDataCoreUserRepository.findAll().stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
+    public boolean existsByUsernameAndActiveTrue(String username) {
+        return springDataCoreUserRepository.existsByUsernameAndActiveTrue(username);
     }
 
     @Override
-    public void deleteById(UUID userId) {
-        springDataCoreUserRepository.deleteById(userId);
-    }
-
-    @Override
-    public boolean existsByUsername(String username) {
-        return springDataCoreUserRepository.existsByUsername(username);
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return springDataCoreUserRepository.existsByEmail(email);
+    public boolean existsByEmailAndActiveTrue(String email) {
+        return springDataCoreUserRepository.existsByEmailAndActiveTrue(email);
     }
 }

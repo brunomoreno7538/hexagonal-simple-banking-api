@@ -12,14 +12,14 @@ import moreno.corebanking_natixis.infrastructure.adapter.inbound.web.mapper.Core
 import moreno.corebanking_natixis.infrastructure.adapter.inbound.web.request.CreateCoreUserRequest;
 import moreno.corebanking_natixis.infrastructure.adapter.inbound.web.request.UpdateCoreUserRequest;
 import moreno.corebanking_natixis.infrastructure.adapter.inbound.web.response.CoreUserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/core-users")
@@ -51,11 +51,10 @@ public class CoreUserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<CoreUserResponse>> getAllCoreUsers() {
-        List<CoreUserResponse> responses = getCoreUserUseCase.findAll().stream()
-                .map(coreUserWebMapper::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<Page<CoreUserResponse>> getAllCoreUsers(Pageable pageable) {
+        Page<CoreUser> coreUsersPage = getCoreUserUseCase.findAll(pageable);
+        Page<CoreUserResponse> responsesPage = coreUsersPage.map(coreUserWebMapper::toResponse);
+        return ResponseEntity.ok(responsesPage);
     }
 
     @PutMapping("/{userId}")

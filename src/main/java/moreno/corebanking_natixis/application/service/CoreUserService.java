@@ -7,13 +7,17 @@ import moreno.corebanking_natixis.application.port.in.GetCoreUserUseCase;
 import moreno.corebanking_natixis.application.port.in.UpdateCoreUserUseCase;
 import moreno.corebanking_natixis.application.port.out.CoreUserRepository;
 import moreno.corebanking_natixis.application.port.out.PasswordEncoderPort;
+import moreno.corebanking_natixis.domain.exception.BankingBusinessException;
 import moreno.corebanking_natixis.domain.exception.DuplicateResourceException;
 import moreno.corebanking_natixis.domain.exception.ResourceNotFoundException;
 import moreno.corebanking_natixis.domain.model.CoreUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,64 +31,68 @@ public class CoreUserService implements CreateCoreUserUseCase, GetCoreUserUseCas
 
     @Override
     public CoreUser create(CoreUser coreUser) {
-        if (coreUserRepository.existsByUsername(coreUser.getUsername())) {
-            throw new DuplicateResourceException("Username " + coreUser.getUsername() + " already exists.");
+        if (coreUserRepository.existsByUsernameAndActiveTrue(coreUser.getUsername())) {
+            throw new DuplicateResourceException("Username " + coreUser.getUsername() + " already exists and is active.");
         }
-        if (coreUserRepository.existsByEmail(coreUser.getEmail())) {
-            throw new DuplicateResourceException("Email " + coreUser.getEmail() + " already exists.");
+        if (coreUserRepository.existsByEmailAndActiveTrue(coreUser.getEmail())) {
+            throw new DuplicateResourceException("Email " + coreUser.getEmail() + " already exists and is active.");
         }
         coreUser.setPassword(passwordEncoderPort.encode(coreUser.getPassword()));
         coreUser.setEnabled(true);
+        coreUser.setActive(true);
         return coreUserRepository.save(coreUser);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<CoreUser> findById(UUID userId) {
-        return coreUserRepository.findById(userId);
+        return coreUserRepository.findByIdAndActiveTrue(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<CoreUser> findByUsername(String username) {
-        return coreUserRepository.findByUsername(username);
+        return coreUserRepository.findByUsernameAndActiveTrue(username);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CoreUser> findAll() {
-        return coreUserRepository.findAll();
+    public Page<CoreUser> findAll(Pageable pageable) {
+        return coreUserRepository.findAllByActiveTrue(pageable);
     }
 
     @Override
     public CoreUser update(UUID userId, CoreUser coreUserUpdateData) {
-        CoreUser existingUser = coreUserRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("CoreUser not found with id: " + userId));
+        CoreUser existingUser = coreUserRepository.findByIdAndActiveTrue(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Active CoreUser not found with id: " + userId));
 
         if (coreUserUpdateData.getEmail() != null && !coreUserUpdateData.getEmail().equals(existingUser.getEmail())) {
-            if (coreUserRepository.existsByEmail(coreUserUpdateData.getEmail())) {
+            if (coreUserRepository.existsByEmailAndActiveTrue(coreUserUpdateData.getEmail())) {
                 throw new DuplicateResourceException("Email " + coreUserUpdateData.getEmail() + " already exists.");
             }
             existingUser.setEmail(coreUserUpdateData.getEmail());
         }
-        if (coreUserUpdateData.getFullName() != null) {
-            existingUser.setFullName(coreUserUpdateData.getFullName());
-        }
-        if (coreUserUpdateData.getRole() != null) {
-            existingUser.setRole(coreUserUpdateData.getRole());
-        }
-        if (coreUserUpdateData.getPassword() != null && !coreUserUpdateData.getPassword().isBlank()) {
-            existingUser.setPassword(passwordEncoderPort.encode(coreUserUpdateData.getPassword()));
-        }
-
         return coreUserRepository.save(existingUser);
     }
 
     @Override
-    public void deleteById(UUID userId) {
-        if (!coreUserRepository.findById(userId).isPresent()) {
-            throw new ResourceNotFoundException("CoreUser not found with id: " + userId);
+    public void deleteById(UUID userIdToDelete) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String currentUsername = (principal instanceof UserDetails) ? ((UserDetails) principal).getUsername() : principal.toString();
+
+        CoreUser userToDelete = coreUserRepository.findByIdEvenIfInactive(userIdToDelete)
+                .orElseThrow(() -> new ResourceNotFoundException("CoreUser not found with id: " + userIdToDelete));
+
+        if (!userToDelete.isActive()) {
+            return;
         }
-        coreUserRepository.deleteById(userId);
+
+        if (userToDelete.getUsername().equals(currentUsername)) {
+            throw new BankingBusinessException("Admin users cannot delete themselves.");
+        }
+
+        userToDelete.setActive(false);
+        userToDelete.setEnabled(false);
+        coreUserRepository.save(userToDelete);
     }
 }
