@@ -26,14 +26,4 @@ public class AccountRepositoryImpl implements AccountRepository {
     public Optional<Account> findById(UUID accountId) {
         return springDataAccountRepository.findById(accountId).map(mapper::toDomain);
     }
-
-    @Override
-    public Optional<Account> findByAccountNumber(String accountNumber) {
-        return springDataAccountRepository.findByAccountNumber(accountNumber).map(mapper::toDomain);
-    }
-
-    @Override
-    public Optional<Account> findByHolderId(UUID holderId) {
-        return springDataAccountRepository.findByHolderId(holderId).map(mapper::toDomain);
-    }
 }
