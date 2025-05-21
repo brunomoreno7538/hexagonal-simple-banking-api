@@ -34,8 +34,8 @@ The project uses Hexagonal Architecture to separate core business logic from inf
 
 1.  **Clone the repository** (if applicable):
     ```bash
-    git clone https://github.com/brunomoreno7538/natixis-hexa-simple-banking-api
-    cd natixis-hexa-simple-banking-api
+    git clone https://github.com/brunomoreno7538/hexagonal-simple-banking-api
+    cd hexagonal-simple-banking-api
     ```
 
 2.  **Build the project using Maven:**
