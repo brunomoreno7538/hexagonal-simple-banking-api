@@ -1,15 +1,20 @@
 package moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence;
 
 import lombok.RequiredArgsConstructor;
+import moreno.corebanking_natixis.application.dto.AdminTransactionFiltersDTO;
+import moreno.corebanking_natixis.application.port.out.TransactionFilterParams;
 import moreno.corebanking_natixis.application.port.out.TransactionRepository;
 import moreno.corebanking_natixis.domain.model.Transaction;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.entity.TransactionJpaEntity;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.mapper.TransactionPersistenceMapper;
 import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.repository.SpringDataTransactionRepository;
+import moreno.corebanking_natixis.infrastructure.adapter.outbound.persistence.specification.TransactionSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,8 +38,27 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     }
 
     @Override
-    public Page<Transaction> findByAccountId(UUID accountId, Pageable pageable) {
-        Page<TransactionJpaEntity> pageOfEntities = springDataTransactionRepository.findByAccountId(accountId, pageable);
+    public Page<Transaction> findTransactionsFiltered(TransactionFilterParams filters, Pageable pageable) {
+        Specification<TransactionJpaEntity> spec = TransactionSpecifications.withFilters(filters);
+        Page<TransactionJpaEntity> pageOfEntities = springDataTransactionRepository.findAll(spec, pageable);
+        return pageOfEntities.map(mapper::toDomain);
+    }
+
+    @Override
+    public BigDecimal sumAmountFiltered(TransactionFilterParams filters) {
+        BigDecimal sum = springDataTransactionRepository.sumAmountByFilters(
+                filters.getAccountId(),
+                filters.getStartDateTime(),
+                filters.getEndDateTime(),
+                filters.getTransactionType()
+        );
+        return sum != null ? sum : BigDecimal.ZERO;
+    }
+
+    @Override
+    public Page<Transaction> findAllSystemTransactionsFiltered(AdminTransactionFiltersDTO filters, Pageable pageable) {
+        Specification<TransactionJpaEntity> spec = TransactionSpecifications.withAdminFilters(filters);
+        Page<TransactionJpaEntity> pageOfEntities = springDataTransactionRepository.findAll(spec, pageable);
         return pageOfEntities.map(mapper::toDomain);
     }
 }
