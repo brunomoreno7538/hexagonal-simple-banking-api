@@ -33,8 +33,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (!coreUserRepository.findByUsernameAndActiveTrue("initialadmin").isPresent()) {
             CoreUser adminUser = CoreUser.builder()
-                    .username("initialadmin")
-                    .password("initialpassword")
+                    .username("admin")
+                    .password("123456")
                     .email("initialadmin@example.com")
                     .fullName("Initial Admin")
                     .role(UserRole.ADMIN)
@@ -82,11 +82,11 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
         
-        String baseMerchantUsername = "basemerchantadmin";
+        String baseMerchantUsername = "merchant";
         if (createdBaseMerchant != null && !merchantUserRepository.findByUsernameAndActiveTrue(baseMerchantUsername).isPresent()) {
             MerchantUser baseMerchantUserDetails = MerchantUser.builder()
                     .username(baseMerchantUsername)
-                    .password("baseMerchPass123")
+                    .password("123456")
                     .email("admin@" + createdBaseMerchant.getName().toLowerCase().replaceAll("\\s+", "") + ".com")
                     .fullName("Base Merchant Admin")
                     .role(UserRole.MERCHANT_ADMIN)

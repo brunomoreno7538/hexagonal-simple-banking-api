@@ -52,10 +52,25 @@ The project uses Hexagonal Architecture to separate core business logic from inf
 
 The application will start by default on `http://localhost:8080`.
 
+### Running with Docker
+
+```bash
+# Build the image (multi-stage)
+docker build -t corebanking_natixis .
+
+# Run the container, mapping port 8080
+docker run --rm -p 8080:8080 corebanking_natixis
+```
+
 ### Initial Admin User
 An initial admin user is created on startup by the `DataInitializer` class:
-* **Username:** `initialadmin`
-* **Password:** `initialpassword`
+* **Username:** `admin`
+* **Password:** `123456`
+
+### Initial Merchant User
+An initial merchant user is created on startup by the `DataInitializer` class:
+* **Username:** `merchant`
+* **Password:** `123456`
 
 Use these credentials to log in via the `/api/v1/auth/login` endpoint to get a JWT token for accessing protected admin endpoints.
 
