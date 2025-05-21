@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import moreno.corebanking_natixis.domain.model.UserRole;
+import moreno.corebanking_natixis.infrastructure.validation.ValidEnumValue;
 
 @Data
 public class CreateCoreUserRequest {
@@ -25,5 +26,10 @@ public class CreateCoreUserRequest {
     private String fullName;
 
     @NotNull
+    @ValidEnumValue(
+            enumClass = UserRole.class,
+            allowedValues = {"ADMIN"},
+            message = "Role for core user must be ADMIN."
+    )
     private UserRole role;
 }
