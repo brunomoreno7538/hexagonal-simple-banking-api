@@ -130,7 +130,7 @@ class MerchantServiceTest {
 
         verify(merchantUserRepository).save(merchantUserCaptor.capture());
         assertFalse(merchantUserCaptor.getValue().isActive());
-        assertFalse(merchantUserCaptor.getValue().isEnabled());
+        assertFalse(merchantUserCaptor.getValue().getEnabled());
 
         verify(merchantRepository).save(merchantCaptor.capture());
         assertFalse(merchantCaptor.getValue().isActive());

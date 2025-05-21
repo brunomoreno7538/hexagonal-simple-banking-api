@@ -19,7 +19,7 @@ public class MerchantUserPersistenceMapper {
                 merchantUser.getFullName(),
                 merchantUser.getRole(),
                 merchantUser.getMerchantId(),
-                merchantUser.isEnabled(),
+                merchantUser.getEnabled(),
                 merchantUser.isActive()
         );
     }

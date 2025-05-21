@@ -105,7 +105,7 @@ class MerchantUserServiceTest {
         assertNotNull(created);
         assertEquals("newstoremanager", created.getUsername());
         assertEquals("encodedPass", created.getPassword());
-        assertTrue(created.isEnabled());
+        assertTrue(created.getEnabled());
         assertTrue(created.isActive());
         assertEquals(parentMerchantIdValue, created.getMerchantId());
         verify(merchantUserRepository).save(created);
@@ -173,7 +173,7 @@ class MerchantUserServiceTest {
         verify(merchantUserRepository).save(userCaptor.capture());
         MerchantUser savedUser = userCaptor.getValue();
         assertFalse(savedUser.isActive());
-        assertFalse(savedUser.isEnabled());
+        assertFalse(savedUser.getEnabled());
     }
 
     @Test

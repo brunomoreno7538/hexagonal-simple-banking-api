@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import moreno.corebanking_natixis.domain.model.UserRole;
+import moreno.corebanking_natixis.infrastructure.validation.ValidEnumValue;
 
 import java.util.UUID;
 
@@ -27,6 +28,11 @@ public class CreateMerchantUserRequest {
     private String fullName;
 
     @NotNull
+    @ValidEnumValue(
+            enumClass = UserRole.class,
+            allowedValues = {"MERCHANT_ADMIN", "MERCHANT_USER"},
+            message = "Role for merchant user must be MERCHANT_ADMIN or MERCHANT_USER."
+    )
     private UserRole role;
 
     @NotNull

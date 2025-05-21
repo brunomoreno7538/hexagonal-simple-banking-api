@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -39,8 +40,9 @@ public class MerchantController {
     }
 
     @GetMapping("/{merchantId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MERCHANT_ADMIN', 'MERCHANT_USER')")
-    public ResponseEntity<MerchantResponse> getMerchantById(@PathVariable UUID merchantId) {
+    @PreAuthorize("hasRole('ADMIN') or @customSecurityService.isUserFromMerchant(authentication, #merchantId)")
+    public ResponseEntity<MerchantResponse> getMerchantById(@PathVariable UUID merchantId,
+                                                            Authentication authentication) {
         return getMerchantUseCase.findById(merchantId)
                 .map(merchantWebMapper::toResponse)
                 .map(ResponseEntity::ok)

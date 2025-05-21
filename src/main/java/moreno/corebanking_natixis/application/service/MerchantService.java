@@ -2,10 +2,12 @@ package moreno.corebanking_natixis.application.service;
 
 import lombok.RequiredArgsConstructor;
 import moreno.corebanking_natixis.application.port.in.*;
+import moreno.corebanking_natixis.application.port.out.AccountRepository;
 import moreno.corebanking_natixis.application.port.out.MerchantRepository;
 import moreno.corebanking_natixis.application.port.out.MerchantUserRepository;
 import moreno.corebanking_natixis.domain.exception.DuplicateResourceException;
 import moreno.corebanking_natixis.domain.exception.ResourceNotFoundException;
+import moreno.corebanking_natixis.domain.model.Account;
 import moreno.corebanking_natixis.domain.model.Merchant;
 import moreno.corebanking_natixis.domain.model.MerchantUser;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class MerchantService implements CreateMerchantUseCase, GetMerchantUseCase, UpdateMerchantUseCase, DeleteMerchantUseCase {
 
     private final MerchantRepository merchantRepository;
+    private final AccountRepository accountRepository;
     private final MerchantUserRepository merchantUserRepository;
 
     @Override
@@ -37,6 +41,15 @@ public class MerchantService implements CreateMerchantUseCase, GetMerchantUseCas
         merchantDetails.setAccountId(newAccountId);
         merchantDetails.setActive(true);
 
+        Account merchantAccount = Account.builder()
+                .id(newAccountId)
+                .accountNumber(UUID.randomUUID().toString())
+                .balance(BigDecimal.ZERO)
+                .accountHolderType("MERCHANT")
+                .holderId(newMerchantId)
+                .build();
+
+        accountRepository.save(merchantAccount);
         return merchantRepository.save(merchantDetails);
     }
 
