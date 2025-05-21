@@ -29,20 +29,16 @@ public class AccountController {
 
     private final GetAccountBalanceUseCase getAccountBalanceUseCase;
     private final GetAccountDetailsUseCase getAccountDetailsUseCase;
-    private final MerchantUserRepository merchantUserRepository;
     private final AccountWebMapper accountWebMapper;
 
 
     @GetMapping("/{accountId}/balance")
-    @PreAuthorize("hasAnyRole('MERCHANT_ADMIN', 'MERCHANT_USER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAnyRole('MERCHANT_ADMIN', 'MERCHANT_USER')")
     public ResponseEntity<AccountBalanceResponse> getAccountBalance(
             @PathVariable UUID accountId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        MerchantUser authenticatedMerchantUser = merchantUserRepository.findByUsernameAndActiveTrue(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("Authenticated merchant user not found."));
-
-        BigDecimal balance = getAccountBalanceUseCase.getBalance(authenticatedMerchantUser.getId(), accountId);
+        BigDecimal balance = getAccountBalanceUseCase.getBalance(userDetails, accountId);
         return ResponseEntity.ok(new AccountBalanceResponse(accountId, balance));
     }
 

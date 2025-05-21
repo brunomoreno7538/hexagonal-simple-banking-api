@@ -38,6 +38,7 @@ class AccountServiceTest {
 
     private UUID merchantUserIdValue;
     private UUID accountIdValue;
+    private UUID merchantFkIdValue;
     private MerchantUser merchantUser;
     private Account account;
     private UserDetails adminPrincipal;
@@ -47,7 +48,7 @@ class AccountServiceTest {
     void setUp() {
         merchantUserIdValue = UUID.randomUUID();
         accountIdValue = UUID.randomUUID();
-        UUID merchantFkIdValue = UUID.randomUUID();
+        merchantFkIdValue = UUID.randomUUID();
 
         merchantUser = MerchantUser.builder()
                 .id(merchantUserIdValue)
@@ -78,36 +79,45 @@ class AccountServiceTest {
     }
 
     @Test
-    void getBalance_shouldReturnBalance_whenAuthorized() {
-        when(merchantUserRepository.findByIdAndActiveTrue(merchantUserIdValue)).thenReturn(Optional.of(merchantUser));
+    void getBalance_shouldReturnBalance_whenCalledByAuthorizedMerchantUser() {
+        when(merchantUserRepository.findByUsernameAndActiveTrue("merchantTestUser")).thenReturn(Optional.of(merchantUser));
+        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(account));
         when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(account));
 
-        BigDecimal balance = accountService.getBalance(merchantUserIdValue, accountIdValue);
+        BigDecimal balance = accountService.getBalance(merchantPrincipal, accountIdValue);
 
         assertEquals(new BigDecimal("1000.00"), balance);
-        verify(merchantUserRepository).findByIdAndActiveTrue(merchantUserIdValue);
+        verify(merchantUserRepository).findByUsernameAndActiveTrue("merchantTestUser");
         verify(accountRepository).findById(accountIdValue);
     }
 
     @Test
+    void getBalance_shouldReturnBalance_whenCalledByAdmin() {
+        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(account));
+
+        BigDecimal balance = accountService.getBalance(adminPrincipal, accountIdValue);
+
+        assertEquals(new BigDecimal("1000.00"), balance);
+        verify(accountRepository).findById(accountIdValue);
+        verify(merchantUserRepository, never()).findByUsernameAndActiveTrue(anyString());
+    }
+
+
+    @Test
     void getBalance_shouldThrowResourceNotFound_whenMerchantUserNotFound() {
-        when(merchantUserRepository.findByIdAndActiveTrue(merchantUserIdValue)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> accountService.getBalance(merchantUserIdValue, accountIdValue));
+        when(merchantUserRepository.findByUsernameAndActiveTrue("merchantTestUser")).thenReturn(Optional.empty());
+        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(account));
+
+        assertThrows(ResourceNotFoundException.class, () -> accountService.getBalance(merchantPrincipal, accountIdValue));
     }
 
     @Test
-    void getBalance_shouldThrowResourceNotFound_whenAccountNotFound() {
-        when(merchantUserRepository.findByIdAndActiveTrue(merchantUserIdValue)).thenReturn(Optional.of(merchantUser));
-        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> accountService.getBalance(merchantUserIdValue, accountIdValue));
-    }
-
-    @Test
-    void getBalance_shouldThrowBankingBusinessException_whenNotAuthorized() {
+    void getBalance_shouldThrowBankingBusinessException_whenMerchantUserNotAuthorized() {
         Account otherAccount = Account.builder().id(accountIdValue).holderId(UUID.randomUUID()).accountHolderType("MERCHANT").build();
-        when(merchantUserRepository.findByIdAndActiveTrue(merchantUserIdValue)).thenReturn(Optional.of(merchantUser));
-        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(otherAccount));
-        assertThrows(BankingBusinessException.class, () -> accountService.getBalance(merchantUserIdValue, accountIdValue));
+        when(merchantUserRepository.findByUsernameAndActiveTrue("merchantTestUser")).thenReturn(Optional.of(merchantUser));
+        when(accountRepository.findById(accountIdValue)).thenReturn(Optional.of(otherAccount)); 
+
+        assertThrows(BankingBusinessException.class, () -> accountService.getBalance(merchantPrincipal, accountIdValue));
     }
 
     @Test

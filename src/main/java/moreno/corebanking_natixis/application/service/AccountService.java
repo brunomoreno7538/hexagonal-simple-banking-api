@@ -25,12 +25,19 @@ public class AccountService implements GetAccountBalanceUseCase, GetAccountDetai
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal getBalance(UUID merchantUserId, UUID accountId) {
-        MerchantUser merchantUser = merchantUserRepository.findByIdAndActiveTrue(merchantUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("MerchantUser not found with ID: " + merchantUserId));
-
+    public BigDecimal getBalance(UserDetails principal, UUID accountId) {
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found with ID: " + accountId));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found or not active with ID: " + accountId));
+
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return account.getBalance();
+        }
+
+        MerchantUser merchantUser = merchantUserRepository.findByUsernameAndActiveTrue(principal.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated active merchant user not found. Username: " + principal.getUsername()));
 
         if (!"MERCHANT".equals(account.getAccountHolderType()) || !account.getHolderId().equals(merchantUser.getMerchantId())) {
             throw new BankingBusinessException("MerchantUser not authorized to view this account's balance.");
