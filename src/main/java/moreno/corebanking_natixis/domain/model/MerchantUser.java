@@ -14,7 +14,7 @@ public class MerchantUser {
     private String fullName;
     private UserRole role;
     private UUID merchantId;
-    private boolean enabled;
+    private Boolean enabled;
     @Builder.Default
     private boolean active = true;
 }

@@ -46,13 +46,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         if (merchantUserOptional.isPresent()) {
             MerchantUser merchantUser = merchantUserOptional.get();
-            if (!merchantUser.isEnabled()) {
+            if (!merchantUser.getEnabled()) {
                 throw new UsernameNotFoundException("User " + username + " is disabled.");
             }
             Set<GrantedAuthority> authorities = Collections.singleton(
                     new SimpleGrantedAuthority("ROLE_" + merchantUser.getRole().name())
             );
-            return new User(merchantUser.getUsername(), merchantUser.getPassword(), merchantUser.isEnabled(),
+            return new User(merchantUser.getUsername(), merchantUser.getPassword(), merchantUser.getEnabled(),
                     true, true, true, authorities);
         }
 
